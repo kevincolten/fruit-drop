@@ -4,467 +4,487 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#7B9BD6">
-<title>Fruit Drop v10</title>
+<meta name="theme-color" content="#8B6914">
+<title>Game Shelf</title>
 <link rel="manifest" href="manifest.json">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
-  *{margin:0;padding:0;box-sizing:border-box}
-  html,body{width:100%;height:100%;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;font-family:'Fredoka',sans-serif;background:#7B9BD6}
-  canvas{display:block;touch-action:none;margin:0 auto}
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden;
+    font-family: 'Fredoka', sans-serif;
+    -webkit-user-select: none; user-select: none;
+  }
+
+  .shelf-bg {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #C4973C 0%, #A67C2E 50%, #8B6914 100%);
+    padding: 0 0 40px 0;
+  }
+
+  /* Header */
+  .header {
+    display: flex; align-items: center; justify-content: center;
+    padding: 28px 16px 12px;
+    gap: 12px;
+  }
+  .header h1 {
+    font-size: 28px; font-weight: 700;
+    color: #FFF8E7;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 1px 0 #6B4A28;
+    letter-spacing: 1px;
+  }
+  .settings-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(255,248,231,0.15); border: 2px solid rgba(255,248,231,0.3);
+    color: #FFF8E7; font-size: 22px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .settings-btn:hover { background: rgba(255,248,231,0.25); }
+
+  /* Shelf row */
+  .shelf-row {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto 0;
+    padding: 20px 24px 0;
+  }
+
+  /* Game items grid */
+  .shelf-items {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding-bottom: 12px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* The wooden shelf plank */
+  .shelf-plank {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+    height: 22px;
+    z-index: 1;
+  }
+  .shelf-plank-inner {
+    position: absolute;
+    left: 8px; right: 8px;
+    top: 0; height: 22px;
+    background: linear-gradient(180deg, #D4A852 0%, #B8923E 40%, #A67C2E 100%);
+    border-radius: 0 0 4px 4px;
+    box-shadow:
+      0 4px 8px rgba(0,0,0,0.3),
+      inset 0 2px 0 rgba(255,255,255,0.15),
+      inset 0 -1px 0 rgba(0,0,0,0.2);
+  }
+  .shelf-plank-inner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(180deg, #E8C36A 0%, #D4A852 100%);
+    border-radius: 0 0 2px 2px;
+  }
+  /* Wood grain texture */
+  .shelf-plank-inner::after {
+    content: '';
+    position: absolute;
+    top: 5px; left: 20px; right: 20px; height: 1px;
+    background: rgba(0,0,0,0.08);
+  }
+
+  /* Side supports */
+  .shelf-support-left, .shelf-support-right {
+    position: absolute;
+    top: -8px;
+    width: 18px; height: 30px;
+    background: linear-gradient(90deg, #9E7328 0%, #B8923E 50%, #9E7328 100%);
+    border-radius: 3px;
+    box-shadow: 2px 3px 6px rgba(0,0,0,0.25);
+    z-index: 3;
+  }
+  .shelf-support-left { left: 0; }
+  .shelf-support-right { right: 0; }
+
+  /* Game card */
+  .game-card {
+    position: relative;
+    aspect-ratio: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    text-decoration: none;
+  }
+  .game-card:hover { transform: scale(1.05); }
+  .game-card:active { transform: scale(0.97); }
+
+  /* 3D game piece container */
+  .game-piece {
+    width: 80%;
+    aspect-ratio: 1;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    perspective: 300px;
+  }
+
+  /* Game piece 3D object */
+  .piece-3d {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    position: relative;
+    transform: rotateX(10deg);
+    transform-style: preserve-3d;
+  }
+
+  /* Game label */
+  .game-label {
+    font-size: 13px; font-weight: 600;
+    color: #FFF8E7;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    margin-top: 6px;
+    text-align: center;
+  }
+
+  /* Fruit Drop piece - a cherry/sphere */
+  .piece-fruit-drop {
+    background: radial-gradient(circle at 35% 30%, #FF9999 0%, #E74C3C 40%, #A93226 100%);
+    box-shadow:
+      0 8px 20px rgba(0,0,0,0.35),
+      inset 0 -4px 12px rgba(0,0,0,0.2),
+      inset 0 4px 8px rgba(255,255,255,0.15);
+  }
+  .piece-fruit-drop::before {
+    content: '';
+    position: absolute;
+    top: 12%; left: 22%;
+    width: 30%; height: 25%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.45) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: rotate(-20deg);
+  }
+  .piece-fruit-drop::after {
+    content: '';
+    position: absolute;
+    top: -12%; left: 45%;
+    width: 12%; height: 20%;
+    background: linear-gradient(180deg, #4CAF50 0%, #2E7D32 100%);
+    border-radius: 50% 50% 40% 40%;
+    transform: rotate(15deg);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  /* Coming soon pieces */
+  .piece-coming-soon {
+    background: radial-gradient(circle at 35% 30%, #D4D4D4 0%, #AAAAAA 40%, #787878 100%);
+    box-shadow:
+      0 8px 20px rgba(0,0,0,0.25),
+      inset 0 -4px 12px rgba(0,0,0,0.15),
+      inset 0 4px 8px rgba(255,255,255,0.2);
+    opacity: 0.4;
+  }
+  .piece-coming-soon::before {
+    content: '?';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 40px; font-weight: 700;
+    color: rgba(255,255,255,0.4);
+  }
+
+  /* Star decorations */
+  .star {
+    position: absolute;
+    color: #FFD700;
+    font-size: 18px;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.3));
+    z-index: 5;
+    animation: twinkle 3s ease-in-out infinite;
+  }
+  .star-1 { bottom: 20px; right: 4px; animation-delay: 0s; }
+  .star-2 { bottom: 30px; left: 8px; animation-delay: 1.5s; font-size: 14px; }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  /* Piece: Water Drop (placeholder) */
+  .piece-water {
+    background: radial-gradient(circle at 35% 35%, #E8F4FD 0%, #7CB9E8 40%, #4A90D9 80%, #2E6CB8 100%);
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    box-shadow:
+      0 8px 20px rgba(0,0,0,0.3),
+      inset 0 -6px 12px rgba(0,0,0,0.15),
+      inset 0 6px 10px rgba(255,255,255,0.3);
+  }
+  .piece-water::before {
+    content: '';
+    position: absolute;
+    top: 15%; left: 25%;
+    width: 25%; height: 20%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.5) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: rotate(-15deg);
+  }
+
+  /* Piece: Wooden Block */
+  .piece-wood {
+    background: linear-gradient(135deg, #D4A852 0%, #B8923E 30%, #A67C2E 60%, #8B6914 100%);
+    border-radius: 12%;
+    box-shadow:
+      0 8px 20px rgba(0,0,0,0.35),
+      inset 0 -4px 10px rgba(0,0,0,0.2),
+      inset 0 4px 8px rgba(255,255,255,0.15);
+  }
+  .piece-wood::before {
+    content: '';
+    position: absolute;
+    top: 20%; left: 15%; right: 15%; bottom: 20%;
+    border: 2px solid rgba(139,105,20,0.3);
+    border-radius: 8%;
+  }
+
+  /* Piece: Gear/Cog */
+  .piece-gear {
+    background: radial-gradient(circle at 35% 30%, #C0C0C0 0%, #909090 40%, #606060 100%);
+    border-radius: 50%;
+    box-shadow:
+      0 8px 20px rgba(0,0,0,0.35),
+      inset 0 -4px 10px rgba(0,0,0,0.25),
+      inset 0 4px 8px rgba(255,255,255,0.2);
+  }
+  .piece-gear::before {
+    content: '';
+    position: absolute;
+    top: 30%; left: 30%; width: 40%; height: 40%;
+    background: radial-gradient(circle, #404040 0%, #606060 100%);
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.1);
+  }
+
+  /* Piece: Green leaf/lily */
+  .piece-leaf {
+    background: radial-gradient(circle at 40% 35%, #8FD87A 0%, #5CAB4A 40%, #3D8B2F 100%);
+    border-radius: 50%;
+    box-shadow:
+      0 8px 20px rgba(0,0,0,0.3),
+      inset 0 -4px 12px rgba(0,0,0,0.15),
+      inset 0 4px 8px rgba(255,255,255,0.2);
+  }
+  .piece-leaf::before {
+    content: '';
+    position: absolute;
+    top: 15%; left: 28%;
+    width: 22%; height: 18%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.35) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .piece-leaf::after {
+    content: '';
+    position: absolute;
+    top: 20%; right: 15%;
+    width: 25%; height: 60%;
+    border-right: 2px solid rgba(255,255,255,0.15);
+    border-radius: 0 50% 50% 0;
+  }
+
+  /* Piece: Dice */
+  .piece-dice {
+    background: linear-gradient(145deg, #F5F0E8 0%, #E8DDD0 40%, #D4C8B8 100%);
+    border-radius: 18%;
+    box-shadow:
+      0 8px 20px rgba(0,0,0,0.35),
+      inset 0 -4px 10px rgba(0,0,0,0.1),
+      inset 0 4px 8px rgba(255,255,255,0.4);
+  }
+  .dice-dot {
+    position: absolute;
+    width: 14%; height: 14%;
+    background: radial-gradient(circle, #2C1810 0%, #1A0E08 100%);
+    border-radius: 50%;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+  }
+  .dot-1 { top: 22%; left: 22%; }
+  .dot-2 { top: 22%; right: 22%; }
+  .dot-3 { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+  .dot-4 { bottom: 22%; left: 22%; }
+  .dot-5 { bottom: 22%; right: 22%; }
+
+  /* Piece: Marble/Ball */
+  .piece-marble {
+    background: radial-gradient(circle at 30% 25%, #FFE4B5 0%, #DEB887 30%, #CD853F 60%, #8B6914 100%);
+    border-radius: 50%;
+    box-shadow:
+      0 8px 20px rgba(0,0,0,0.4),
+      inset 0 -6px 14px rgba(0,0,0,0.25),
+      inset 0 6px 10px rgba(255,255,255,0.2);
+  }
+  .piece-marble::before {
+    content: '';
+    position: absolute;
+    top: 10%; left: 18%;
+    width: 35%; height: 28%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.5) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: rotate(-25deg);
+  }
+  .piece-marble::after {
+    content: '';
+    position: absolute;
+    top: 25%; left: 20%;
+    width: 60%; height: 50%;
+    border-top: 2px solid rgba(255,255,255,0.1);
+    border-radius: 50%;
+    transform: rotate(-30deg);
+  }
+
+  /* Empty slot */
+  .game-card.empty {
+    cursor: default;
+  }
+  .game-card.empty:hover { transform: none; }
+  .game-card.empty:active { transform: none; }
+
+  /* Back panel behind shelves */
+  .back-panel {
+    position: fixed;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 648px;
+    height: 100%;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 80px,
+        rgba(0,0,0,0.02) 80px,
+        rgba(0,0,0,0.02) 82px
+      ),
+      linear-gradient(180deg, #DEB887 0%, #C9A86C 100%);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .shelf-bg > * { position: relative; z-index: 1; }
 </style>
 </head>
 <body>
-<canvas id="c"></canvas>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<div class="back-panel"></div>
+<div class="shelf-bg">
+
+  <div class="header">
+    <button class="settings-btn" aria-label="Settings">&#9881;</button>
+    <h1>Game Shelf</h1>
+  </div>
+
+  <!-- Shelf 1 -->
+  <div class="shelf-row">
+    <div class="shelf-items">
+      <a class="game-card" href="games/fruit-drop/index.html">
+        <div class="game-piece">
+          <div class="piece-3d piece-fruit-drop"></div>
+        </div>
+        <div class="game-label">Fruit Drop</div>
+      </a>
+      <div class="game-card empty">
+        <div class="game-piece">
+          <div class="piece-3d piece-marble"></div>
+        </div>
+        <div class="game-label" style="opacity:0.4">Coming Soon</div>
+      </div>
+    </div>
+  </div>
+  <div class="shelf-plank">
+    <div class="shelf-support-left"></div>
+    <div class="shelf-plank-inner"></div>
+    <div class="shelf-support-right"></div>
+    <span class="star star-1">&#9733;</span>
+  </div>
+
+  <!-- Shelf 2 -->
+  <div class="shelf-row">
+    <div class="shelf-items">
+      <div class="game-card empty">
+        <div class="game-piece">
+          <div class="piece-3d piece-water"></div>
+        </div>
+        <div class="game-label" style="opacity:0.4">Coming Soon</div>
+      </div>
+      <div class="game-card empty">
+        <div class="game-piece">
+          <div class="piece-3d piece-dice">
+            <div class="dice-dot dot-1"></div>
+            <div class="dice-dot dot-2"></div>
+            <div class="dice-dot dot-3"></div>
+            <div class="dice-dot dot-4"></div>
+            <div class="dice-dot dot-5"></div>
+          </div>
+        </div>
+        <div class="game-label" style="opacity:0.4">Coming Soon</div>
+      </div>
+    </div>
+  </div>
+  <div class="shelf-plank">
+    <div class="shelf-support-left"></div>
+    <div class="shelf-plank-inner"></div>
+    <div class="shelf-support-right"></div>
+    <span class="star star-2">&#9733;</span>
+  </div>
+
+  <!-- Shelf 3 -->
+  <div class="shelf-row">
+    <div class="shelf-items">
+      <div class="game-card empty">
+        <div class="game-piece">
+          <div class="piece-3d piece-leaf"></div>
+        </div>
+        <div class="game-label" style="opacity:0.4">Coming Soon</div>
+      </div>
+      <div class="game-card empty">
+        <div class="game-piece">
+          <div class="piece-3d piece-gear"></div>
+        </div>
+        <div class="game-label" style="opacity:0.4">Coming Soon</div>
+      </div>
+    </div>
+  </div>
+  <div class="shelf-plank">
+    <div class="shelf-support-left"></div>
+    <div class="shelf-plank-inner"></div>
+    <div class="shelf-support-right"></div>
+    <span class="star star-1">&#9733;</span>
+  </div>
+
+  <!-- Shelf 4 -->
+  <div class="shelf-row">
+    <div class="shelf-items">
+      <div class="game-card empty">
+        <div class="game-piece">
+          <div class="piece-3d piece-wood"></div>
+        </div>
+        <div class="game-label" style="opacity:0.4">Coming Soon</div>
+      </div>
+      <div class="game-card empty">
+        <div class="game-piece">
+          <div class="piece-3d piece-coming-soon"></div>
+        </div>
+        <div class="game-label" style="opacity:0.4">Coming Soon</div>
+      </div>
+    </div>
+  </div>
+  <div class="shelf-plank">
+    <div class="shelf-support-left"></div>
+    <div class="shelf-plank-inner"></div>
+    <div class="shelf-support-right"></div>
+  </div>
+
+</div>
+
 <script>
-const VER = "v10";
-const { Engine, Runner, Bodies, Body, Composite, Events } = Matter;
-
-// ═══════ AUDIO ═══════
-const AC = window.AudioContext || window.webkitAudioContext;
-let ac;
-function initAudio() { if (!ac) ac = new AC(); if (ac.state === 'suspended') ac.resume(); }
-function sndMerge(tier) {
-  if (!ac) return; const t = ac.currentTime;
-  const f = [523,587,659,784,880,988,1047,1175,1319,1480,1568][Math.min(tier, 10)];
-  let o, g;
-  o = ac.createOscillator(); g = ac.createGain(); o.type = 'sine';
-  o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 1.5, t + .08);
-  g.gain.setValueAtTime(.25, t); g.gain.exponentialRampToValueAtTime(.001, t + .35);
-  o.connect(g).connect(ac.destination); o.start(t); o.stop(t + .4);
-  o = ac.createOscillator(); g = ac.createGain(); o.type = 'triangle';
-  o.frequency.setValueAtTime(f * 2, t); o.frequency.exponentialRampToValueAtTime(f * 3, t + .1);
-  g.gain.setValueAtTime(.1, t); g.gain.exponentialRampToValueAtTime(.001, t + .2);
-  o.connect(g).connect(ac.destination); o.start(t); o.stop(t + .25);
-  if (tier >= 5) { o = ac.createOscillator(); g = ac.createGain(); o.type = 'sine';
-    o.frequency.setValueAtTime(80 + tier * 5, t); o.frequency.exponentialRampToValueAtTime(40, t + .3);
-    g.gain.setValueAtTime(.3, t); g.gain.exponentialRampToValueAtTime(.001, t + .3);
-    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + .35); }
-}
-function sndDrop() { if (!ac) return; const t = ac.currentTime;
-  const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine';
-  o.frequency.setValueAtTime(400, t); o.frequency.exponentialRampToValueAtTime(200, t + .1);
-  g.gain.setValueAtTime(.08, t); g.gain.exponentialRampToValueAtTime(.001, t + .1);
-  o.connect(g).connect(ac.destination); o.start(t); o.stop(t + .12); }
-function sndCombo(n) { if (!ac) return; const t = ac.currentTime; const ns = [523,659,784,988,1175];
-  for (let i = 0; i < Math.min(n, 5); i++) { const o = ac.createOscillator(), g = ac.createGain();
-    o.type = 'sine'; o.frequency.value = ns[i]; g.gain.setValueAtTime(.12, t + i * .06);
-    g.gain.exponentialRampToValueAtTime(.001, t + i * .06 + .15);
-    o.connect(g).connect(ac.destination); o.start(t + i * .06); o.stop(t + i * .06 + .18); } }
-
-// ═══════ FRUITS ═══════
-const FR = [
-  { nm:'Cherry',     r:16,  c:'#E74C3C', h:'#FF6B6B', st:1, p:1  },
-  { nm:'Strawberry', r:20,  c:'#C0392B', h:'#E74C3C', st:0, p:3  },
-  { nm:'Grape',      r:26,  c:'#8E44AD', h:'#A569BD', st:0, p:6  },
-  { nm:'Orange',     r:32,  c:'#E67E22', h:'#F39C12', st:0, p:10 },
-  { nm:'Lime',       r:36,  c:'#A8D86A', h:'#C5E99E', st:1, p:15 },
-  { nm:'Apple',      r:46,  c:'#27AE60', h:'#6FCF7C', st:1, p:21 },
-  { nm:'Peach',      r:56,  c:'#F5A0C0', h:'#FADCE8', st:0, p:28 },
-  { nm:'Coconut',    r:66,  c:'#8B6914', h:'#A67C2E', st:0, p:36 },
-  { nm:'Pineapple',  r:76,  c:'#F1C40F', h:'#F9E154', st:1, p:45 },
-  { nm:'Melon',      r:88,  c:'#76C96A', h:'#A8E6A0', st:0, p:55 },
-  { nm:'Watermelon', r:100, c:'#2ECC71', h:'#58D68D', st:0, p:66 },
-];
-const MAX_DROP = 4, ri = n => Math.floor(Math.random() * n);
-const bd = new Map(); // body.id -> { fi, merging, r }
-
-// ═══════ STATE ═══════
-let engine, runner, cv, cx;
-let W, H, dpr;
-let bL, bR, bFloor, bTop;
-let score = 0, best = +(localStorage.getItem('fdBest') || 0);
-let cur = ri(MAX_DROP + 1), nxt = ri(MAX_DROP + 1);
-let dropX = 0, canDrop = true, ptrDown = false;
-let fruits = [];
-let effects = [], particles = [], popups = [];
-let combo = 0, comboT = 0;
-let shake = 0, shX = 0, shY = 0, flash = 0;
-// Camera: camY is the world-Y offset (negative = scrolled up to see higher stacks)
-let camY = 0, camTgt = 0;
-
-let wallBodies = [];
-
-// ═══════ INIT ═══════
-function init() {
-  cv = document.getElementById('c');
-  cx = cv.getContext('2d');
-
-  engine = Engine.create({ gravity: { x: 0, y: 1 } });
-  runner = Runner.create();
-  Runner.run(runner, engine);
-
-  doResize();
-  window.addEventListener('resize', doResize);
-
-  setupInput();
-  Events.on(engine, 'collisionStart', onHit);
-  requestAnimationFrame(renderLoop);
-}
-
-function doResize() {
-  dpr = window.devicePixelRatio || 1;
-  W = Math.min(window.innerWidth, 600);
-  H = window.innerHeight;
-  cv.style.width = W + 'px'; cv.style.height = H + 'px';
-  cv.width = W * dpr; cv.height = H * dpr;
-  bL = 20; bR = W - 20;
-  bFloor = Math.round(H * 0.82);
-  bTop = Math.round(H * 0.18);
-  dropX = Math.max(bL + 20, Math.min(bR - 20, dropX || W / 2));
-
-  // Rebuild walls
-  if (wallBodies.length) Composite.remove(engine.world, wallBodies);
-  const T = 200, WH = 8000, cX = (bL + bR) / 2, bW = bR - bL;
-  wallBodies = [
-    Bodies.rectangle(cX, bFloor + T / 2, bW + T, T, { isStatic: true, friction: 0.8, restitution: 0.1 }),
-    Bodies.rectangle(bL - T / 2, bFloor - WH / 2, T, WH, { isStatic: true, friction: 0.5, restitution: 0.1 }),
-    Bodies.rectangle(bR + T / 2, bFloor - WH / 2, T, WH, { isStatic: true, friction: 0.5, restitution: 0.1 }),
-  ];
-  Composite.add(engine.world, wallBodies);
-}
-
-// ═══════ INPUT ═══════
-function setupInput() {
-  const gx = e => (e.touches ? e.touches[0] : e).clientX - cv.getBoundingClientRect().left;
-  cv.addEventListener('pointerdown', e => { e.preventDefault(); initAudio(); ptrDown = true; dropX = clampDX(gx(e)); });
-  cv.addEventListener('pointermove', e => { e.preventDefault(); if (ptrDown) dropX = clampDX(gx(e)); });
-  cv.addEventListener('pointerup', e => { e.preventDefault(); if (ptrDown && canDrop) doDrop(); ptrDown = false; });
-}
-function clampDX(x) { const r = FR[cur].r; return Math.max(bL + r + 2, Math.min(bR - r - 2, x)); }
-
-// ═══════ DROP ═══════
-function doDrop() {
-  if (!canDrop) return;
-  canDrop = false; combo = 0;
-  const fi = cur, f = FR[fi];
-  // Drop from just above the visible box top (in world space)
-  const wy = bTop + camY - 10;
-  const b = Bodies.circle(dropX, wy, f.r, {
-    restitution: 0.15, friction: 0.5, density: 0.001 + fi * 0.0004, label: 'fruit'
-  });
-  bd.set(b.id, { fi, merging: false, r: f.r, born: performance.now() });
-  Composite.add(engine.world, b);
-  fruits.push(b);
-  sndDrop();
-  cur = nxt; nxt = ri(MAX_DROP + 1);
-  setTimeout(() => { canDrop = true; }, 450);
-}
-
-// ═══════ MERGE ═══════
-function onHit(ev) {
-  for (const pr of ev.pairs) {
-    const a = pr.bodyA, b = pr.bodyB;
-    const da = bd.get(a.id), db = bd.get(b.id);
-    if (!da || !db) continue;
-    if (da.merging || db.merging) continue;
-    if (da.fi !== db.fi || da.fi >= FR.length - 1) continue;
-
-    da.merging = true; db.merging = true;
-    const ni = da.fi + 1, nf = FR[ni];
-    const mx = (a.position.x + b.position.x) / 2, my = (a.position.y + b.position.y) / 2;
-
-    Composite.remove(engine.world, a); Composite.remove(engine.world, b);
-    fruits = fruits.filter(f => f !== a && f !== b);
-    bd.delete(a.id); bd.delete(b.id);
-
-    const nb = Bodies.circle(mx, my, nf.r, {
-      restitution: 0.12, friction: 0.5, density: 0.001 + ni * 0.0004, label: 'fruit'
-    });
-    bd.set(nb.id, { fi: ni, merging: false, r: nf.r, born: performance.now() });
-    Body.setVelocity(nb, { x: 0, y: -2 - ni * 0.4 });
-    Composite.add(engine.world, nb); fruits.push(nb);
-
-    score += nf.p;
-    if (score > best) { best = score; localStorage.setItem('fdBest', best); }
-    combo++; comboT = 1500;
-    if (combo >= 2) sndCombo(combo);
-    const I = ni / (FR.length - 1);
-    shake = Math.max(shake, 4 + I * 18);
-    flash = Math.max(flash, 0.08 + I * 0.35);
-    sndMerge(ni);
-    spawnFX(mx, my, nf, ni, I);
-    popups.push({ x: mx, y: my, t: '+' + nf.p, l: 1, s: 18 + ni * 3, ic: 0 });
-    if (combo >= 2) popups.push({ x: mx, y: my - 28, t: combo + 'x COMBO!', l: 1.2, s: 14 + combo * 2, ic: 1 });
-  }
-}
-
-function spawnFX(x, y, f, tier, I) {
-  effects.push({ x, y, r: f.r, l: 1, c: f.h });
-  if (tier >= 5) setTimeout(() => effects.push({ x, y, r: f.r * 1.3, l: 1, c: f.c }), 80);
-  for (let i = 0, n = 8 + tier * 4; i < n; i++) {
-    const a = (Math.PI * 2 * i) / n + Math.random() * .3, sp = 2 + Math.random() * 4 + I * 6;
-    particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 2,
-      sz: 2 + Math.random() * 3 + I * 3, l: 1, c: Math.random() > .5 ? f.h : f.c, g: .08 + Math.random() * .04 });
-  }
-  if (tier >= 4) for (let i = 0; i < 4 + tier; i++) {
-    const a = Math.random() * Math.PI * 2, sp = 3 + Math.random() * 5;
-    particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 3,
-      sz: 4 + Math.random() * 3, l: 1.2, c: '#FFD700', g: .05, star: 1 });
-  }
-}
-
-// ═══════ CAMERA ═══════
-function updateCam() {
-  let highY = bFloor;
-  const now = performance.now();
-  for (const b of fruits) {
-    const d = bd.get(b.id);
-    if (!d || d.merging) continue;
-    // Ignore fruits still in the drop zone (above box) or just spawned
-    if (b.position.y < bTop + 20) continue;
-    if (now - (d.born || 0) < 600) continue;
-    const top = b.position.y - d.r;
-    if (top < highY) highY = top;
-  }
-  if (highY < bTop) {
-    camTgt = highY - bTop - 60;
-  } else {
-    camTgt = 0;
-  }
-  camTgt = Math.min(camTgt, 0);
-  camY += (camTgt - camY) * 0.04;
-  if (Math.abs(camY) < 0.3 && camTgt === 0) camY = 0;
-}
-
-// ═══════ RENDER LOOP ═══════
-let lastR = 0;
-function renderLoop(t) {
-  const dt = Math.min(t - (lastR || t), 33);
-  lastR = t;
-
-  updateCam();
-  if (comboT > 0) { comboT -= dt; if (comboT <= 0) combo = 0; }
-  if (shake > 0) { shX = (Math.random() - .5) * shake; shY = (Math.random() - .5) * shake; shake *= .87; if (shake < .5) shake = 0; } else { shX = shY = 0; }
-  if (flash > 0) { flash *= .88; if (flash < .01) flash = 0; }
-  particles = particles.filter(p => { p.l -= dt / 600; p.x += p.vx; p.y += p.vy; p.vy += p.g; p.vx *= .98; return p.l > 0; });
-  effects = effects.filter(e => { e.l -= dt / 400; return e.l > 0; });
-  popups = popups.filter(p => { p.l -= dt / 900; p.y -= dt * .04; return p.l > 0; });
-
-  draw();
-  requestAnimationFrame(renderLoop);
-}
-
-// ═══════ DRAWING ═══════
-function draw() {
-  cx.save();
-  cx.scale(dpr, dpr);
-
-  // Background (screen space)
-  const bg = cx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#7B9BD6'); bg.addColorStop(1, '#6A89C2');
-  cx.fillStyle = bg; cx.fillRect(0, 0, W, H);
-
-  // Screen shake
-  cx.save();
-  cx.translate(shX, shY);
-
-  // UI (screen space — no camera offset)
-  drawUI();
-
-  // ── WORLD SPACE — apply camera offset to EVERYTHING in the box ──
-  cx.save();
-  cx.translate(0, -camY); // THIS is the camera transform
-
-  // Draw box (world space)
-  drawBox();
-
-  // Clip to box area
-  cx.save();
-  cx.beginPath();
-  cx.rect(bL - 1, bTop - 4000, bR - bL + 2, bFloor - bTop + 4000 + 12);
-  cx.clip();
-
-  // Draw world-space objects
-  drawFruits();
-  drawEffects();
-  drawParts();
-  drawPopups();
-
-  cx.restore(); // end clip
-  cx.restore(); // end camera translate
-  // ── END WORLD SPACE ──
-
-  // Preview fruit + guide line (screen space — always visible at top)
-  if (canDrop && ptrDown) drawGuide();
-  if (canDrop) drawPreview();
-
-  // Flash overlay
-  if (flash > 0) { cx.fillStyle = 'rgba(255,255,240,' + flash + ')'; cx.fillRect(0, 0, W, H); }
-
-  cx.restore(); // end shake
-
-  // Legend + version (screen space)
-  drawLegend();
-  cx.fillStyle = 'rgba(255,255,255,0.4)'; cx.font = '500 10px Fredoka'; cx.textAlign = 'left';
-  cx.fillText(VER + ' | balls=' + fruits.length + ' | camY=' + camY.toFixed(1), 4, H - 4);
-
-  cx.restore(); // end dpr scale
-}
-
-function drawUI() {
-  const mx = W / 2, my = 44;
-  cx.fillStyle = '#FFF8E7'; cx.strokeStyle = '#E8D5A8'; cx.lineWidth = 3;
-  rr(cx, mx - 60, my - 22, 120, 44, 22); cx.fill(); cx.stroke();
-  cx.fillStyle = '#E67E22'; cx.font = '600 13px Fredoka'; cx.textAlign = 'center';
-  cx.fillText('\u{1F3C6} ' + best, mx, my - 5);
-  cx.fillStyle = '#5D4E37'; cx.font = '700 22px Fredoka';
-  cx.fillText(score, mx, my + 19);
-  if (combo >= 2 && comboT > 0) {
-    cx.save(); cx.globalAlpha = Math.min(1, comboT / 300);
-    cx.translate(mx, my + 40); cx.scale(1 + combo * .05, 1 + combo * .05);
-    cx.fillStyle = '#FF6B35'; cx.font = '700 16px Fredoka'; cx.fillText(combo + 'x COMBO', 0, 0); cx.restore();
-  }
-  const nx = W - 56, ny = 44;
-  cx.fillStyle = '#FFF8E7'; cx.strokeStyle = '#E8D5A8'; cx.lineWidth = 2;
-  rr(cx, nx - 40, ny - 18, 80, 36, 18); cx.fill(); cx.stroke();
-  cx.fillStyle = '#999'; cx.font = '500 11px Fredoka'; cx.textAlign = 'left'; cx.fillText('Next', nx - 30, ny + 4);
-  drawIcon(nx + 16, ny, Math.min(FR[nxt].r, 14), nxt);
-}
-
-function drawBox() {
-  // Box extends far upward for infinite stacking
-  const visTop = bTop - 4000;
-  // Back
-  cx.fillStyle = '#F0E6D0'; cx.fillRect(bL, visTop, bR - bL, bFloor - visTop);
-  // Inner edge shading
-  cx.fillStyle = '#D8C9A8'; cx.fillRect(bL, visTop, 3, bFloor - visTop); cx.fillRect(bR - 3, visTop, 3, bFloor - visTop);
-  // Left wall
-  cx.fillStyle = '#C9B896'; cx.fillRect(bL - 12, visTop, 12, bFloor - visTop + 12);
-  // Right wall
-  cx.fillRect(bR, visTop, 12, bFloor - visTop + 12);
-  // Floor
-  cx.fillRect(bL - 12, bFloor, bR - bL + 24, 12);
-  // Floor top highlight
-  cx.fillStyle = '#B8A87A'; cx.fillRect(bL, bFloor, bR - bL, 2);
-}
-
-function drawGuide() {
-  // Screen space — from preview position down to where floor appears on screen
-  cx.save(); cx.setLineDash([8, 8]); cx.strokeStyle = 'rgba(90,70,50,0.18)'; cx.lineWidth = 1.5;
-  cx.beginPath(); cx.moveTo(dropX, bTop); cx.lineTo(dropX, bFloor - camY); cx.stroke();
-  cx.setLineDash([]); cx.restore();
-}
-
-function drawPreview() {
-  // Screen space — always at the top of the visible box
-  const f = FR[cur];
-  drawFruit(dropX, bTop - f.r - 16, f.r, cur, .85);
-}
-
-function drawFruits() {
-  // World space (camera already applied)
-  for (const b of fruits) {
-    const d = bd.get(b.id);
-    if (!d || d.merging) continue;
-    drawFruit(b.position.x, b.position.y, d.r, d.fi, 1);
-  }
-}
-
-function drawFruit(x, y, r, idx, a) {
-  const f = FR[idx]; cx.save(); cx.globalAlpha = a;
-  cx.beginPath(); cx.arc(x + 2, y + 3, r, 0, Math.PI * 2); cx.fillStyle = 'rgba(0,0,0,0.08)'; cx.fill();
-  const g = cx.createRadialGradient(x - r * .3, y - r * .3, r * .05, x, y, r);
-  g.addColorStop(0, f.h); g.addColorStop(1, f.c);
-  cx.beginPath(); cx.arc(x, y, r, 0, Math.PI * 2); cx.fillStyle = g; cx.fill();
-  cx.strokeStyle = dk(f.c, .2); cx.lineWidth = Math.max(1.5, r * .04); cx.stroke();
-  cx.beginPath(); cx.arc(x - r * .25, y - r * .25, r * .35, 0, Math.PI * 2); cx.fillStyle = 'rgba(255,255,255,0.25)'; cx.fill();
-  cx.beginPath(); cx.arc(x - r * .12, y - r * .38, r * .12, 0, Math.PI * 2); cx.fillStyle = 'rgba(255,255,255,0.35)'; cx.fill();
-  if (f.stem && r > 12) {
-    cx.beginPath(); cx.moveTo(x, y - r); cx.quadraticCurveTo(x + r * .15, y - r - r * .28, x + r * .1, y - r - r * .22);
-    cx.strokeStyle = '#6B4A28'; cx.lineWidth = Math.max(2, r * .07); cx.lineCap = 'round'; cx.stroke();
-    cx.beginPath(); cx.ellipse(x + r * .2, y - r - r * .15, r * .13, r * .06, -.5, 0, Math.PI * 2); cx.fillStyle = '#4CAF50'; cx.fill();
-  }
-  drawFace(x, y, r, idx);
-  if (idx === 7) { cx.globalAlpha = a * .15; for (let i = -2; i <= 2; i++) { cx.beginPath(); cx.arc(x, y, r * (.5 + i * .15), -.3, Math.PI + .3, false); cx.strokeStyle = '#3E2B0A'; cx.lineWidth = 2; cx.stroke(); } }
-  if (idx === 8) { cx.globalAlpha = a * .12; for (let i = -3; i <= 3; i++) { cx.beginPath(); cx.moveTo(x + i * r * .25, y - r * .7); cx.lineTo(x + i * r * .25 + r * .3, y + r * .7); cx.strokeStyle = '#B8860B'; cx.lineWidth = 1.5; cx.stroke(); cx.beginPath(); cx.moveTo(x + i * r * .25, y - r * .7); cx.lineTo(x + i * r * .25 - r * .3, y + r * .7); cx.stroke(); } }
-  if (idx === 10) { cx.globalAlpha = a * .15; for (let a2 = 0; a2 < Math.PI * 2; a2 += Math.PI / 6) { cx.beginPath(); cx.moveTo(x, y); cx.lineTo(x + Math.cos(a2) * r * .95, y + Math.sin(a2) * r * .95); cx.strokeStyle = '#1B8C4A'; cx.lineWidth = 3; cx.stroke(); } }
-  cx.restore();
-}
-
-function drawFace(x, y, r, idx) {
-  const ey = y - r * .05, es = r * .28, er = Math.max(2, r * .1);
-  cx.fillStyle = '#3D2B1F';
-  if (idx % 3 === 0) {
-    cx.beginPath(); cx.arc(x - es, ey, er, 0, Math.PI * 2); cx.fill();
-    cx.beginPath(); cx.arc(x + es, ey, er, 0, Math.PI * 2); cx.fill();
-    cx.fillStyle = '#FFF';
-    cx.beginPath(); cx.arc(x - es + er * .3, ey - er * .3, er * .4, 0, Math.PI * 2); cx.fill();
-    cx.beginPath(); cx.arc(x + es + er * .3, ey - er * .3, er * .4, 0, Math.PI * 2); cx.fill();
-  } else if (idx % 3 === 1) {
-    cx.beginPath(); cx.ellipse(x - es, ey, er * .7, er, 0, 0, Math.PI * 2); cx.fill();
-    cx.beginPath(); cx.ellipse(x + es, ey, er * .7, er, 0, 0, Math.PI * 2); cx.fill();
-    cx.fillStyle = '#FFF';
-    cx.beginPath(); cx.arc(x - es + er * .2, ey - er * .35, er * .3, 0, Math.PI * 2); cx.fill();
-    cx.beginPath(); cx.arc(x + es + er * .2, ey - er * .35, er * .3, 0, Math.PI * 2); cx.fill();
-  } else {
-    cx.strokeStyle = '#3D2B1F'; cx.lineWidth = Math.max(1.5, er * .6); cx.lineCap = 'round';
-    cx.beginPath(); cx.arc(x - es, ey + er * .3, er * .7, Math.PI + .3, -.3, false); cx.stroke();
-    cx.beginPath(); cx.arc(x + es, ey + er * .3, er * .7, Math.PI + .3, -.3, false); cx.stroke();
-  }
-  const my = y + r * .18; cx.strokeStyle = '#3D2B1F'; cx.lineWidth = Math.max(1.2, r * .04); cx.lineCap = 'round';
-  if (idx <= 2) { cx.beginPath(); cx.arc(x, my, r * .06, 0, Math.PI * 2); cx.fillStyle = '#3D2B1F'; cx.fill(); }
-  else if (idx <= 5) { cx.beginPath(); cx.arc(x, my - r * .04, r * .14, .15, Math.PI - .15); cx.stroke(); }
-  else { cx.beginPath(); cx.arc(x, my - r * .06, r * .16, .1, Math.PI - .1); cx.stroke(); }
-  cx.fillStyle = 'rgba(255,120,120,0.2)';
-  cx.beginPath(); cx.ellipse(x - es - r * .05, y + r * .12, r * .12, r * .07, 0, 0, Math.PI * 2); cx.fill();
-  cx.beginPath(); cx.ellipse(x + es + r * .05, y + r * .12, r * .12, r * .07, 0, 0, Math.PI * 2); cx.fill();
-}
-
-function drawIcon(x, y, r, idx) {
-  const f = FR[idx]; const g = cx.createRadialGradient(x - r * .2, y - r * .2, 0, x, y, r);
-  g.addColorStop(0, f.h); g.addColorStop(1, f.c);
-  cx.beginPath(); cx.arc(x, y, r, 0, Math.PI * 2); cx.fillStyle = g; cx.fill();
-  cx.strokeStyle = dk(f.c, .15); cx.lineWidth = 1; cx.stroke();
-}
-
-function drawEffects() {
-  for (const e of effects) { cx.save(); const pr = 1 - e.l;
-    cx.globalAlpha = e.l * .6;
-    cx.beginPath(); cx.arc(e.x, e.y, e.r * (1 + pr * 2.5), 0, Math.PI * 2);
-    cx.strokeStyle = e.c; cx.lineWidth = (4 + e.r * .06) * e.l; cx.stroke();
-    if (e.l > .5) { const gr = e.r * (1 + pr * .5);
-      const gd = cx.createRadialGradient(e.x, e.y, 0, e.x, e.y, gr);
-      gd.addColorStop(0, e.c + '60'); gd.addColorStop(1, e.c + '00');
-      cx.beginPath(); cx.arc(e.x, e.y, gr, 0, Math.PI * 2); cx.fillStyle = gd; cx.fill(); }
-    cx.restore(); }
-}
-
-function drawParts() {
-  for (const p of particles) { cx.save(); cx.globalAlpha = Math.min(1, p.l);
-    if (p.star) { cx.beginPath(); for (let i = 0; i < 10; i++) { const a = (Math.PI * i) / 5 - Math.PI / 2;
-        const rd = i % 2 === 0 ? p.sz * p.l : p.sz * p.l * .4;
-        if (i === 0) cx.moveTo(p.x + Math.cos(a) * rd, p.y + Math.sin(a) * rd);
-        else cx.lineTo(p.x + Math.cos(a) * rd, p.y + Math.sin(a) * rd); }
-      cx.closePath(); cx.fillStyle = p.c; cx.fill();
-    } else { cx.beginPath(); cx.arc(p.x, p.y, p.sz * Math.min(1, p.l), 0, Math.PI * 2); cx.fillStyle = p.c; cx.fill(); }
-    cx.restore(); }
-}
-
-function drawPopups() {
-  for (const p of popups) { cx.save();
-    const sc = p.l > .8 ? 1 + (1 - (p.l - .8) / .2) * .4 : 1;
-    cx.globalAlpha = Math.min(1, p.l * 1.5); cx.translate(p.x, p.y); cx.scale(sc, sc);
-    cx.fillStyle = p.ic ? '#FF6B35' : '#E67E22'; cx.font = '700 ' + p.s + 'px Fredoka'; cx.textAlign = 'center';
-    cx.strokeStyle = '#FFF'; cx.lineWidth = 3; cx.strokeText(p.t, 0, 0); cx.fillText(p.t, 0, 0); cx.restore(); }
-}
-
-function drawLegend() {
-  const y = bFloor + 24 - camY, tw = bR - bL, n = FR.length, sp = (tw - 20) / n;
-  cx.fillStyle = 'rgba(255,248,231,0.6)'; rr(cx, bL, y - 13, tw, 26, 13); cx.fill();
-  for (let i = 0; i < n; i++) {
-    const x = bL + 10 + i * sp + sp / 2; drawIcon(x, y, Math.min(7 + i * .5, 10), i);
-    if (i < n - 1) { cx.fillStyle = 'rgba(0,0,0,0.12)'; cx.font = '9px Fredoka'; cx.textAlign = 'center'; cx.fillText('\u203A', x + sp / 2, y + 3); }
-  }
-}
-
-// ═══════ HELPERS ═══════
-function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.lineTo(x + w - r, y); c.quadraticCurveTo(x + w, y, x + w, y + r); c.lineTo(x + w, y + h - r); c.quadraticCurveTo(x + w, y + h, x + w - r, y + h); c.lineTo(x + r, y + h); c.quadraticCurveTo(x, y + h, x, y + h - r); c.lineTo(x, y + r); c.quadraticCurveTo(x, y, x + r, y); c.closePath(); }
-function dk(hex, a) { const n = parseInt(hex.slice(1), 16); return 'rgb(' + (Math.max(0, ((n >> 16) & 0xFF) * (1 - a)) | 0) + ',' + (Math.max(0, ((n >> 8) & 0xFF) * (1 - a)) | 0) + ',' + (Math.max(0, (n & 0xFF) * (1 - a)) | 0) + ')'; }
-
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
-init();
 </script>
 </body>
 </html>

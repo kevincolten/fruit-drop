@@ -1,7 +1,8 @@
-const CACHE_NAME = 'fruit-drop-v1';
+const CACHE_NAME = 'game-shelf-v1';
 const ASSETS = [
   '/index.html',
   '/manifest.json',
+  '/games/fruit-drop/index.html',
   'https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js'
 ];
