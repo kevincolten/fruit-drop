@@ -4,7 +4,7 @@ A Suika-style fruit merge game built as a Progressive Web App. Drop fruits into 
 
 ## Play
 
-**[Play Online →](https://YOUR_USERNAME.github.io/fruit-drop/)**
+**[Play Online →](https://kevincolten.github.io/fruit-drop/)**
 
 ## How to Play
 
