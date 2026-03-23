@@ -1,12 +1,12 @@
 {
-  "name": "Fruit Drop - Merge Puzzle",
-  "short_name": "Fruit Drop",
-  "description": "Drop and merge fruits in this addictive physics puzzle game!",
+  "name": "Game Shelf",
+  "short_name": "Game Shelf",
+  "description": "A calming collection of casual games on a cozy wooden shelf.",
   "start_url": "/index.html",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#7B9BD6",
-  "theme_color": "#7B9BD6",
+  "background_color": "#8B6914",
+  "theme_color": "#8B6914",
   "icons": [
     {
       "src": "icon-192.png",
