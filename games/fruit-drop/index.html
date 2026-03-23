@@ -4,9 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#7B9BD6">
-<title>Fruit Drop v10</title>
+<meta name="theme-color" content="#1a1a2e">
+<title>Fruit Drop</title>
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-title" content="Fruit Drop">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
@@ -141,8 +143,8 @@ function doResize() {
   H = window.innerHeight;
   cv.style.width = W + 'px'; cv.style.height = H + 'px';
   cv.width = W * dpr; cv.height = H * dpr;
-  bL = 20; bR = W - 20;
-  bFloor = Math.round(H * 0.92);
+  bL = 12; bR = W - 12;
+  bFloor = H - 12;
   bTop = Math.round(H * 0.10);
   dropX = Math.max(bL + 20, Math.min(bR - 20, dropX || W / 2));
 
@@ -339,11 +341,6 @@ function draw() {
   if (flash > 0) { cx.fillStyle = t.flash + flash + ')'; cx.fillRect(0, 0, W, H); }
 
   cx.restore(); // end shake
-
-  // Version (screen space)
-  cx.fillStyle = t.info; cx.font = '500 10px Fredoka'; cx.textAlign = 'left';
-  cx.fillText(VER + ' | balls=' + fruits.length + ' | camY=' + camY.toFixed(1), 4, H - 4);
-
   cx.restore(); // end dpr scale
 }
 
@@ -368,19 +365,23 @@ function drawUI() {
 }
 
 function drawBox() {
-  const t = th();
+  const t = th(), R = 18;
   // Box extends far upward for infinite stacking
   const visTop = bTop - 4000;
+  const oL = bL - 12, oR = bR + 12, oB = bFloor + 12;
+  // Outer frame with rounded top corners
+  cx.fillStyle = t.boxWall;
+  cx.beginPath();
+  cx.moveTo(oL + R, visTop); cx.lineTo(oR - R, visTop);
+  cx.quadraticCurveTo(oR, visTop, oR, visTop + R);
+  cx.lineTo(oR, oB); cx.lineTo(oL, oB);
+  cx.lineTo(oL, visTop + R);
+  cx.quadraticCurveTo(oL, visTop, oL + R, visTop);
+  cx.fill();
   // Back
   cx.fillStyle = t.boxBack; cx.fillRect(bL, visTop, bR - bL, bFloor - visTop);
   // Inner edge shading
   cx.fillStyle = t.boxEdge; cx.fillRect(bL, visTop, 3, bFloor - visTop); cx.fillRect(bR - 3, visTop, 3, bFloor - visTop);
-  // Left wall
-  cx.fillStyle = t.boxWall; cx.fillRect(bL - 12, visTop, 12, bFloor - visTop + 12);
-  // Right wall
-  cx.fillRect(bR, visTop, 12, bFloor - visTop + 12);
-  // Floor
-  cx.fillRect(bL - 12, bFloor, bR - bL + 24, 12);
   // Floor top highlight
   cx.fillStyle = t.boxFloor; cx.fillRect(bL, bFloor, bR - bL, 2);
 }
