@@ -10,7 +10,7 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{width:100%;height:100%;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;font-family:'Fredoka',sans-serif;background:#7B9BD6}
+  html,body{width:100%;height:100%;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;font-family:'Fredoka',sans-serif;background:#7B9BD6;transition:background .3s}
   canvas{display:block;touch-action:none;margin:0 auto}
 </style>
 </head>
@@ -20,6 +20,37 @@
 <script>
 const VER = "v10";
 const { Engine, Runner, Bodies, Body, Composite, Events } = Matter;
+
+// ═══════ DARK MODE ═══════
+let darkMode = false;
+function initDarkMode() {
+  const saved = localStorage.getItem('gs-dark');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  darkMode = saved === '1' || (saved === null && prefersDark);
+  if (darkMode) {
+    document.body.style.background = '#1A1A2E';
+    document.querySelector('meta[name="theme-color"]').content = '#1A1A2E';
+  }
+}
+initDarkMode();
+// Theme colors
+const TH = {
+  light: {
+    bg1: '#7B9BD6', bg2: '#6A89C2',
+    boxBack: '#F0E6D0', boxEdge: '#D8C9A8', boxWall: '#C9B896', boxFloor: '#B8A87A',
+    uiBg: '#FFF8E7', uiBorder: '#E8D5A8', uiScore: '#5D4E37', uiBest: '#E67E22',
+    legendBg: 'rgba(255,248,231,0.6)', info: 'rgba(255,255,255,0.4)',
+    flash: 'rgba(255,255,240,',
+  },
+  dark: {
+    bg1: '#1A1A2E', bg2: '#141428',
+    boxBack: '#2A2535', boxEdge: '#3A3445', boxWall: '#352F40', boxFloor: '#4A4355',
+    uiBg: '#2E2840', uiBorder: '#4A4060', uiScore: '#D4C0A0', uiBest: '#D4943C',
+    legendBg: 'rgba(40,35,55,0.7)', info: 'rgba(200,190,220,0.4)',
+    flash: 'rgba(60,50,80,',
+  }
+};
+function th() { return darkMode ? TH.dark : TH.light; }
 
 // ═══════ AUDIO ═══════
 const AC = window.AudioContext || window.webkitAudioContext;
@@ -253,8 +284,9 @@ function draw() {
   cx.scale(dpr, dpr);
 
   // Background (screen space)
+  const t = th();
   const bg = cx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#7B9BD6'); bg.addColorStop(1, '#6A89C2');
+  bg.addColorStop(0, t.bg1); bg.addColorStop(1, t.bg2);
   cx.fillStyle = bg; cx.fillRect(0, 0, W, H);
 
   // Screen shake
@@ -292,25 +324,25 @@ function draw() {
   if (canDrop) drawPreview();
 
   // Flash overlay
-  if (flash > 0) { cx.fillStyle = 'rgba(255,255,240,' + flash + ')'; cx.fillRect(0, 0, W, H); }
+  if (flash > 0) { cx.fillStyle = t.flash + flash + ')'; cx.fillRect(0, 0, W, H); }
 
   cx.restore(); // end shake
 
   // Legend + version (screen space)
   drawLegend();
-  cx.fillStyle = 'rgba(255,255,255,0.4)'; cx.font = '500 10px Fredoka'; cx.textAlign = 'left';
+  cx.fillStyle = t.info; cx.font = '500 10px Fredoka'; cx.textAlign = 'left';
   cx.fillText(VER + ' | balls=' + fruits.length + ' | camY=' + camY.toFixed(1), 4, H - 4);
 
   cx.restore(); // end dpr scale
 }
 
 function drawUI() {
-  const mx = W / 2, my = 44;
-  cx.fillStyle = '#FFF8E7'; cx.strokeStyle = '#E8D5A8'; cx.lineWidth = 3;
+  const t = th(), mx = W / 2, my = 44;
+  cx.fillStyle = t.uiBg; cx.strokeStyle = t.uiBorder; cx.lineWidth = 3;
   rr(cx, mx - 60, my - 22, 120, 44, 22); cx.fill(); cx.stroke();
-  cx.fillStyle = '#E67E22'; cx.font = '600 13px Fredoka'; cx.textAlign = 'center';
+  cx.fillStyle = t.uiBest; cx.font = '600 13px Fredoka'; cx.textAlign = 'center';
   cx.fillText('\u{1F3C6} ' + best, mx, my - 5);
-  cx.fillStyle = '#5D4E37'; cx.font = '700 22px Fredoka';
+  cx.fillStyle = t.uiScore; cx.font = '700 22px Fredoka';
   cx.fillText(score, mx, my + 19);
   if (combo >= 2 && comboT > 0) {
     cx.save(); cx.globalAlpha = Math.min(1, comboT / 300);
@@ -318,27 +350,28 @@ function drawUI() {
     cx.fillStyle = '#FF6B35'; cx.font = '700 16px Fredoka'; cx.fillText(combo + 'x COMBO', 0, 0); cx.restore();
   }
   const nx = W - 56, ny = 44;
-  cx.fillStyle = '#FFF8E7'; cx.strokeStyle = '#E8D5A8'; cx.lineWidth = 2;
+  cx.fillStyle = t.uiBg; cx.strokeStyle = t.uiBorder; cx.lineWidth = 2;
   rr(cx, nx - 40, ny - 18, 80, 36, 18); cx.fill(); cx.stroke();
-  cx.fillStyle = '#999'; cx.font = '500 11px Fredoka'; cx.textAlign = 'left'; cx.fillText('Next', nx - 30, ny + 4);
+  cx.fillStyle = darkMode ? '#887A9A' : '#999'; cx.font = '500 11px Fredoka'; cx.textAlign = 'left'; cx.fillText('Next', nx - 30, ny + 4);
   drawIcon(nx + 16, ny, Math.min(FR[nxt].r, 14), nxt);
 }
 
 function drawBox() {
+  const t = th();
   // Box extends far upward for infinite stacking
   const visTop = bTop - 4000;
   // Back
-  cx.fillStyle = '#F0E6D0'; cx.fillRect(bL, visTop, bR - bL, bFloor - visTop);
+  cx.fillStyle = t.boxBack; cx.fillRect(bL, visTop, bR - bL, bFloor - visTop);
   // Inner edge shading
-  cx.fillStyle = '#D8C9A8'; cx.fillRect(bL, visTop, 3, bFloor - visTop); cx.fillRect(bR - 3, visTop, 3, bFloor - visTop);
+  cx.fillStyle = t.boxEdge; cx.fillRect(bL, visTop, 3, bFloor - visTop); cx.fillRect(bR - 3, visTop, 3, bFloor - visTop);
   // Left wall
-  cx.fillStyle = '#C9B896'; cx.fillRect(bL - 12, visTop, 12, bFloor - visTop + 12);
+  cx.fillStyle = t.boxWall; cx.fillRect(bL - 12, visTop, 12, bFloor - visTop + 12);
   // Right wall
   cx.fillRect(bR, visTop, 12, bFloor - visTop + 12);
   // Floor
   cx.fillRect(bL - 12, bFloor, bR - bL + 24, 12);
   // Floor top highlight
-  cx.fillStyle = '#B8A87A'; cx.fillRect(bL, bFloor, bR - bL, 2);
+  cx.fillStyle = t.boxFloor; cx.fillRect(bL, bFloor, bR - bL, 2);
 }
 
 function drawGuide() {
@@ -453,7 +486,7 @@ function drawPopups() {
 
 function drawLegend() {
   const y = bFloor + 24 - camY, tw = bR - bL, n = FR.length, sp = (tw - 20) / n;
-  cx.fillStyle = 'rgba(255,248,231,0.6)'; rr(cx, bL, y - 13, tw, 26, 13); cx.fill();
+  cx.fillStyle = th().legendBg; rr(cx, bL, y - 13, tw, 26, 13); cx.fill();
   for (let i = 0; i < n; i++) {
     const x = bL + 10 + i * sp + sp / 2; drawIcon(x, y, Math.min(7 + i * .5, 10), i);
     if (i < n - 1) { cx.fillStyle = 'rgba(0,0,0,0.12)'; cx.font = '9px Fredoka'; cx.textAlign = 'center'; cx.fillText('\u203A', x + sp / 2, y + 3); }

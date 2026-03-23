@@ -369,6 +369,93 @@
   }
 
   .shelf-bg > * { position: relative; z-index: 1; }
+
+  /* ═══════ DARK MODE ═══════ */
+  @media (prefers-color-scheme: dark) { :root { color-scheme: dark; } }
+  .dark .shelf-bg {
+    background: linear-gradient(180deg, #2A2218 0%, #1E1812 50%, #141010 100%);
+  }
+  .dark .back-panel {
+    background:
+      repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 80px,
+        rgba(255,255,255,0.015) 80px,
+        rgba(255,255,255,0.015) 82px
+      ),
+      linear-gradient(180deg, #2E2620 0%, #1A1510 100%);
+  }
+  .dark .header h1 {
+    color: #E8D5B0;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6), 0 1px 0 #000;
+  }
+  .dark .settings-btn {
+    background: rgba(255,248,231,0.08); border-color: rgba(255,248,231,0.15);
+    color: #D4B880;
+  }
+  .dark .settings-btn:hover { background: rgba(255,248,231,0.15); }
+  .dark .shelf-plank-inner {
+    background: linear-gradient(180deg, #5C4A30 0%, #4A3B26 40%, #3A2E1E 100%);
+    box-shadow:
+      0 4px 8px rgba(0,0,0,0.5),
+      inset 0 2px 0 rgba(255,255,255,0.08),
+      inset 0 -1px 0 rgba(0,0,0,0.4);
+  }
+  .dark .shelf-plank-inner::before {
+    background: linear-gradient(180deg, #6B5638 0%, #5C4A30 100%);
+  }
+  .dark .shelf-plank-inner::after {
+    background: rgba(255,255,255,0.04);
+  }
+  .dark .shelf-support-left, .dark .shelf-support-right {
+    background: linear-gradient(90deg, #3A2E1E 0%, #4A3B26 50%, #3A2E1E 100%);
+    box-shadow: 2px 3px 6px rgba(0,0,0,0.5);
+  }
+  .dark .game-label {
+    color: #D4C0A0;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  }
+  .dark .star { color: #B8942E; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5)); }
+  .dark .piece-fruit-drop {
+    background: radial-gradient(circle at 35% 30%, #CC6666 0%, #B83030 40%, #7A2020 100%);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5), inset 0 -4px 12px rgba(0,0,0,0.3), inset 0 4px 8px rgba(255,255,255,0.1);
+  }
+  .dark .piece-fruit-drop::after {
+    background: linear-gradient(180deg, #3A8A3A 0%, #1E5E1E 100%);
+  }
+  .dark .piece-marble {
+    background: radial-gradient(circle at 30% 25%, #C8A870 0%, #A08050 30%, #806030 60%, #5A4010 100%);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6), inset 0 -6px 14px rgba(0,0,0,0.35), inset 0 6px 10px rgba(255,255,255,0.1);
+  }
+  .dark .piece-water {
+    background: radial-gradient(circle at 35% 35%, #A0C8E8 0%, #5090C0 40%, #306898 80%, #1E4870 100%);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5), inset 0 -6px 12px rgba(0,0,0,0.25), inset 0 6px 10px rgba(255,255,255,0.15);
+  }
+  .dark .piece-dice {
+    background: linear-gradient(145deg, #C0B8A8 0%, #A89880 40%, #908070 100%);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5), inset 0 -4px 10px rgba(0,0,0,0.2), inset 0 4px 8px rgba(255,255,255,0.2);
+  }
+  .dark .piece-leaf {
+    background: radial-gradient(circle at 40% 35%, #5CAB4A 0%, #3D8B2F 40%, #286820 100%);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5), inset 0 -4px 12px rgba(0,0,0,0.25), inset 0 4px 8px rgba(255,255,255,0.1);
+  }
+  .dark .piece-gear {
+    background: radial-gradient(circle at 35% 30%, #888 0%, #606060 40%, #404040 100%);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5), inset 0 -4px 10px rgba(0,0,0,0.35), inset 0 4px 8px rgba(255,255,255,0.1);
+  }
+  .dark .piece-gear::before {
+    background: radial-gradient(circle, #282828 0%, #383838 100%);
+  }
+  .dark .piece-wood {
+    background: linear-gradient(135deg, #6B5030 0%, #5A4028 30%, #483020 60%, #382018 100%);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5), inset 0 -4px 10px rgba(0,0,0,0.3), inset 0 4px 8px rgba(255,255,255,0.08);
+  }
+  .dark .piece-wood::before { border-color: rgba(255,255,255,0.08); }
+  .dark .piece-coming-soon {
+    background: radial-gradient(circle at 35% 30%, #666 0%, #444 40%, #2A2A2A 100%);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4), inset 0 -4px 12px rgba(0,0,0,0.2), inset 0 4px 8px rgba(255,255,255,0.05);
+  }
 </style>
 </head>
 <body>
@@ -485,6 +572,24 @@
 
 <script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+// Dark mode: respect saved preference, fall back to system preference
+(function() {
+  const saved = localStorage.getItem('gs-dark');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (saved === '1' || (saved === null && prefersDark)) document.documentElement.classList.add('dark');
+
+  document.querySelector('.settings-btn').addEventListener('click', function() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('gs-dark', isDark ? '1' : '0');
+    document.querySelector('meta[name="theme-color"]').content = isDark ? '#1E1812' : '#8B6914';
+  });
+
+  // Sync theme-color on load
+  if (document.documentElement.classList.contains('dark')) {
+    document.querySelector('meta[name="theme-color"]').content = '#1E1812';
+  }
+})();
 </script>
 </body>
 </html>
