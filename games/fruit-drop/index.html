@@ -136,6 +136,7 @@ function init() {
 
 function doResize() {
   dpr = window.devicePixelRatio || 1;
+  const oldL = bL, oldR = bR, oldFloor = bFloor, oldW = (oldR - oldL) || 1;
   W = window.innerWidth;
   H = window.innerHeight;
   cv.style.width = W + 'px'; cv.style.height = H + 'px';
@@ -144,6 +145,17 @@ function doResize() {
   bFloor = Math.round(H * 0.92);
   bTop = Math.round(H * 0.10);
   dropX = Math.max(bL + 20, Math.min(bR - 20, dropX || W / 2));
+
+  // Remap existing fruits to new bounds
+  if (oldFloor && fruits.length) {
+    const newW = bR - bL;
+    for (const b of fruits) {
+      const rx = (b.position.x - oldL) / oldW;
+      const ny = bFloor - (oldFloor - b.position.y);
+      const nx = bL + rx * newW;
+      Body.setPosition(b, { x: Math.max(bL + 5, Math.min(bR - 5, nx)), y: ny });
+    }
+  }
 
   // Rebuild walls
   if (wallBodies.length) Composite.remove(engine.world, wallBodies);
