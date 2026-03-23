@@ -136,13 +136,13 @@ function init() {
 
 function doResize() {
   dpr = window.devicePixelRatio || 1;
-  W = Math.min(window.innerWidth, 600);
+  W = window.innerWidth;
   H = window.innerHeight;
   cv.style.width = W + 'px'; cv.style.height = H + 'px';
   cv.width = W * dpr; cv.height = H * dpr;
   bL = 20; bR = W - 20;
-  bFloor = Math.round(H * 0.82);
-  bTop = Math.round(H * 0.18);
+  bFloor = Math.round(H * 0.92);
+  bTop = Math.round(H * 0.10);
   dropX = Math.max(bL + 20, Math.min(bR - 20, dropX || W / 2));
 
   // Rebuild walls
@@ -328,8 +328,7 @@ function draw() {
 
   cx.restore(); // end shake
 
-  // Legend + version (screen space)
-  drawLegend();
+  // Version (screen space)
   cx.fillStyle = t.info; cx.font = '500 10px Fredoka'; cx.textAlign = 'left';
   cx.fillText(VER + ' | balls=' + fruits.length + ' | camY=' + camY.toFixed(1), 4, H - 4);
 
