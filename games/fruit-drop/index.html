@@ -139,8 +139,8 @@ function doDrop() {
   if (!canDrop) return;
   canDrop = false; combo = 0;
   const fi = cur, f = FR[fi];
-  // Drop from just above the visible box top (in world space)
-  const wy = bTop + camY - 10;
+  // Drop from above the highest fruit (use camTgt to avoid lag)
+  const wy = bTop + Math.min(camY, camTgt) - f.r - 10;
   const b = Bodies.circle(dropX, wy, f.r, {
     restitution: 0.15, friction: 0.5, density: 0.001 + fi * 0.0004, label: 'fruit'
   });
@@ -212,9 +212,10 @@ function updateCam() {
   for (const b of fruits) {
     const d = bd.get(b.id);
     if (!d || d.merging) continue;
-    // Ignore fruits still in the drop zone (above box) or just spawned
-    if (b.position.y < bTop + 20) continue;
+    // Ignore newly spawned fruits (still falling)
     if (now - (d.born || 0) < 600) continue;
+    // Ignore fruits above the visible area (still in free-fall from drop)
+    if (b.position.y < bTop + camY - 50) continue;
     const top = b.position.y - d.r;
     if (top < highY) highY = top;
   }
@@ -224,7 +225,7 @@ function updateCam() {
     camTgt = 0;
   }
   camTgt = Math.min(camTgt, 0);
-  camY += (camTgt - camY) * 0.04;
+  camY += (camTgt - camY) * 0.12;
   if (Math.abs(camY) < 0.3 && camTgt === 0) camY = 0;
 }
 
